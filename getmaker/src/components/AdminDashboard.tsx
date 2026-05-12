@@ -18,6 +18,7 @@ import {
   ChevronDown,
   MapPin,
   DollarSign,
+  Trash2,
   Phone,
   Star,
 } from "lucide-react";
@@ -37,7 +38,7 @@ export function AdminDashboard({
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>("projects");
   const [projects, setProjects] = useState(initialProjects);
-  const [technicians] = useState(initialTechnicians);
+  const [technicians, setTechnicians] = useState(initialTechnicians);
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
 
   async function handleLogout() {
@@ -45,6 +46,18 @@ export function AdminDashboard({
     await supabase.auth.signOut();
     router.push("/login");
     router.refresh();
+  }
+
+  async function handleDeleteProject(projectId: string) {
+    if (!confirm("Tem certeza que deseja excluir este projeto?")) return;
+    const res = await fetch(`/api/projects/${projectId}`, { method: "DELETE" });
+    if (res.ok) setProjects((prev) => prev.filter((p) => p.id !== projectId));
+  }
+
+  async function handleDeleteTechnician(technicianId: string) {
+    if (!confirm("Tem certeza que deseja excluir este técnico?")) return;
+    const res = await fetch(`/api/technicians/${technicianId}`, { method: "DELETE" });
+    if (res.ok) setTechnicians((prev) => prev.filter((t) => t.id !== technicianId));
   }
 
   async function handleStatusChange(projectId: string, status: ProjectStatus) {
@@ -153,6 +166,7 @@ export function AdminDashboard({
                   key={project.id}
                   project={project}
                   onStatusChange={handleStatusChange}
+                  onDelete={handleDeleteProject}
                   isUpdating={updatingStatus === project.id}
                 />
               ))
@@ -171,7 +185,7 @@ export function AdminDashboard({
             ) : (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {technicians.map((tech) => (
-                  <TechnicianAdminCard key={tech.id} technician={tech} />
+                  <TechnicianAdminCard key={tech.id} technician={tech} onDelete={handleDeleteTechnician} />
                 ))}
               </div>
             )}
@@ -192,10 +206,12 @@ export function AdminDashboard({
 function ProjectAdminRow({
   project,
   onStatusChange,
+  onDelete,
   isUpdating,
 }: {
   project: Project;
   onStatusChange: (id: string, status: ProjectStatus) => void;
+  onDelete: (id: string) => void;
   isUpdating: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
@@ -267,6 +283,13 @@ function ProjectAdminRow({
           >
             {expanded ? "Fechar" : "Ver mais"}
           </button>
+          <button
+            onClick={() => onDelete(project.id)}
+            className="btn-ghost text-xs py-1.5 px-2 text-red-400 hover:text-red-300 hover:bg-red-400/10"
+            title="Excluir projeto"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
 
@@ -300,7 +323,7 @@ function ProjectAdminRow({
   );
 }
 
-function TechnicianAdminCard({ technician }: { technician: Technician }) {
+function TechnicianAdminCard({ technician, onDelete }: { technician: Technician; onDelete: (id: string) => void }) {
   const whatsappLink = technician.whatsapp
     ? formatWhatsAppLink(technician.whatsapp)
     : null;
@@ -347,17 +370,26 @@ function TechnicianAdminCard({ technician }: { technician: Technician }) {
 
       <div className="flex items-center justify-between pt-2 border-t border-brand-border/40 text-xs text-brand-ice/40">
         <span>Desde {formatDate(technician.created_at)}</span>
-        {whatsappLink && (
-          <a
-            href={whatsappLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1 text-emerald-400/70 hover:text-emerald-400 transition"
+        <div className="flex items-center gap-2">
+          {whatsappLink && (
+            <a
+              href={whatsappLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 text-emerald-400/70 hover:text-emerald-400 transition"
+            >
+              <MessageCircle className="w-3.5 h-3.5" />
+              WhatsApp
+            </a>
+          )}
+          <button
+            onClick={() => onDelete(technician.id)}
+            className="flex items-center gap-1 text-red-400/60 hover:text-red-400 transition"
+            title="Excluir técnico"
           >
-            <MessageCircle className="w-3.5 h-3.5" />
-            WhatsApp
-          </a>
-        )}
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </div>
     </div>
   );
