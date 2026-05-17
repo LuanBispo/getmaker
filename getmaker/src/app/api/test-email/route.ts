@@ -23,7 +23,7 @@ export async function GET() {
     .select("name, email");
 
   // 3. Tenta enviar e-mail para o primeiro técnico
-  let emailResult = null;
+ let emailResult: unknown = null;
   if (technicians && technicians.length > 0) {
     const first = technicians[0];
     const result = await resend.emails.send({
