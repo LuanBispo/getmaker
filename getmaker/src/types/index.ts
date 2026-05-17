@@ -61,6 +61,7 @@ export interface Project {
   created_at: string;
   interests_count?: number;
   user_has_interest?: boolean;
+  interested_technicians?: { id: string; name: string; whatsapp: string | null }[];
 }
 
 export interface ProjectInterest {
