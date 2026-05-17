@@ -21,6 +21,7 @@ import {
   Trash2,
   Phone,
   Star,
+  UserCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -67,7 +68,6 @@ export function AdminDashboard({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
     });
-
     if (res.ok) {
       setProjects((prev) =>
         prev.map((p) => (p.id === projectId ? { ...p, status } : p))
@@ -112,7 +112,6 @@ export function AdminDashboard({
               Admin
             </span>
           </div>
-
           <button onClick={handleLogout} className="btn-ghost text-xs py-1.5 px-3">
             <LogOut className="w-3.5 h-3.5" />
             Sair
@@ -120,15 +119,15 @@ export function AdminDashboard({
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-8">
+      <main className="max-w-7xl mx-auto px-4 py-6">
         {/* Tabs */}
-        <div className="flex items-center gap-1 mb-8 border-b border-brand-border/50">
+        <div className="flex items-center gap-1 mb-6 border-b border-brand-border/50 overflow-x-auto">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                "flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 -mb-px",
+                "flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 -mb-px whitespace-nowrap",
                 activeTab === tab.id
                   ? "border-brand-cyan text-brand-cyan"
                   : "border-transparent text-brand-ice/50 hover:text-brand-ice/80"
@@ -137,14 +136,12 @@ export function AdminDashboard({
               {tab.icon}
               {tab.label}
               {tab.count !== undefined && (
-                <span
-                  className={cn(
-                    "text-xs rounded-full px-1.5 py-0.5 font-medium",
-                    activeTab === tab.id
-                      ? "bg-brand-cyan/20 text-brand-cyan"
-                      : "bg-brand-border text-brand-ice/50"
-                  )}
-                >
+                <span className={cn(
+                  "text-xs rounded-full px-1.5 py-0.5 font-medium",
+                  activeTab === tab.id
+                    ? "bg-brand-cyan/20 text-brand-cyan"
+                    : "bg-brand-border text-brand-ice/50"
+                )}>
                   {tab.count}
                 </span>
               )}
@@ -185,7 +182,11 @@ export function AdminDashboard({
             ) : (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {technicians.map((tech) => (
-                  <TechnicianAdminCard key={tech.id} technician={tech} onDelete={handleDeleteTechnician} />
+                  <TechnicianAdminCard
+                    key={tech.id}
+                    technician={tech}
+                    onDelete={handleDeleteTechnician}
+                  />
                 ))}
               </div>
             )}
@@ -218,62 +219,20 @@ function ProjectAdminRow({
   const whatsappLink = formatWhatsAppLink(project.client_whatsapp);
 
   return (
-    <div className="card border-brand-border/60 space-y-0">
-      {/* Row header */}
-      <div className="flex items-start gap-4">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center flex-wrap gap-2 mb-1">
-            <span className="font-semibold text-brand-ice">
-              {project.client_name}
-            </span>
+    <div className="card border-brand-border/60">
+      {/* Linha 1: nome + badges */}
+      <div className="flex items-start justify-between gap-2 mb-2">
+        <div className="min-w-0">
+          <span className="font-semibold text-brand-ice block truncate">
+            {project.client_name}
+          </span>
+          <div className="flex flex-wrap gap-1.5 mt-1">
             <StatusBadge status={project.status} />
             {project.urgency && <UrgencyBadge urgency={project.urgency} />}
           </div>
-
-          <div className="flex items-center gap-4 text-xs text-brand-ice/40 flex-wrap">
-            {project.city_state && (
-              <span className="flex items-center gap-1">
-                <MapPin className="w-3 h-3" />
-                {project.city_state}
-              </span>
-            )}
-            {project.budget_range && (
-              <span className="flex items-center gap-1">
-                <DollarSign className="w-3 h-3" />
-                {project.budget_range}
-              </span>
-            )}
-            <span>{formatDate(project.created_at)}</span>
-            <span className="text-brand-cyan/70">
-              {project.interests_count ?? 0} interesse(s)
-            </span>
-          </div>
-
-          <p className="text-brand-ice/55 text-sm mt-2 line-clamp-2">
-            {project.description}
-          </p>
         </div>
-
-        {/* Actions */}
-        <div className="flex items-center gap-2 shrink-0">
-          <div className="relative">
-            <select
-              value={project.status}
-              onChange={(e) =>
-                onStatusChange(project.id, e.target.value as ProjectStatus)
-              }
-              disabled={isUpdating}
-              className="input text-xs py-1.5 pr-8 appearance-none cursor-pointer"
-            >
-              {(Object.keys(STATUS_LABELS) as ProjectStatus[]).map((s) => (
-                <option key={s} value={s}>
-                  {STATUS_LABELS[s]}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-brand-ice/40 pointer-events-none" />
-          </div>
-
+        {/* Botões no topo direito */}
+        <div className="flex items-center gap-1 shrink-0">
           <button
             onClick={() => setExpanded(!expanded)}
             className={cn(
@@ -293,9 +252,50 @@ function ProjectAdminRow({
         </div>
       </div>
 
+      {/* Linha 2: meta info */}
+      <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-brand-ice/40 mb-2">
+        {project.city_state && (
+          <span className="flex items-center gap-1">
+            <MapPin className="w-3 h-3" />
+            {project.city_state}
+          </span>
+        )}
+        {project.budget_range && (
+          <span className="flex items-center gap-1">
+            <DollarSign className="w-3 h-3" />
+            {project.budget_range}
+          </span>
+        )}
+        <span>{formatDate(project.created_at)}</span>
+        <span className="text-brand-cyan/70">
+          {project.interests_count ?? 0} interesse(s)
+        </span>
+      </div>
+
+      {/* Linha 3: descrição */}
+      <p className="text-brand-ice/55 text-sm line-clamp-2 mb-3">
+        {project.description}
+      </p>
+
+      {/* Linha 4: status selector */}
+      <div className="relative w-full sm:w-56">
+        <select
+          value={project.status}
+          onChange={(e) => onStatusChange(project.id, e.target.value as ProjectStatus)}
+          disabled={isUpdating}
+          className="input text-xs py-1.5 pr-8 appearance-none cursor-pointer w-full"
+        >
+          {(Object.keys(STATUS_LABELS) as ProjectStatus[]).map((s) => (
+            <option key={s} value={s}>{STATUS_LABELS[s]}</option>
+          ))}
+        </select>
+        <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-brand-ice/40 pointer-events-none" />
+      </div>
+
       {/* Expanded details */}
       {expanded && (
-        <div className="mt-4 pt-4 border-t border-brand-border/50 space-y-3 animate-fade-in">
+        <div className="mt-4 pt-4 border-t border-brand-border/50 space-y-4 animate-fade-in">
+          {/* WhatsApp */}
           <div className="flex items-center gap-3">
             <Phone className="w-4 h-4 text-brand-cyan shrink-0" />
             <span className="text-sm text-brand-ice/70">WhatsApp:</span>
@@ -309,6 +309,8 @@ function ProjectAdminRow({
               <MessageCircle className="w-3.5 h-3.5 text-emerald-400" />
             </a>
           </div>
+
+          {/* Descrição completa */}
           <div>
             <p className="text-xs text-brand-ice/40 uppercase tracking-wider mb-1">
               Descrição completa
@@ -317,13 +319,55 @@ function ProjectAdminRow({
               {project.description}
             </p>
           </div>
+
+          {/* Técnicos interessados */}
+          {(project.interested_technicians ?? []).length > 0 && (
+            <div>
+              <p className="text-xs text-brand-ice/40 uppercase tracking-wider mb-2 flex items-center gap-1">
+                <UserCheck className="w-3.5 h-3.5" />
+                Técnicos interessados
+              </p>
+              <div className="space-y-2">
+                {(project.interested_technicians ?? []).map((tech) => (
+                  <div
+                    key={tech.id}
+                    className="flex items-center justify-between bg-brand-dark/50 rounded-lg px-3 py-2"
+                  >
+                    <span className="text-sm text-brand-ice font-medium">
+                      {tech.name}
+                    </span>
+                    {tech.whatsapp && (
+                      <a
+                        href={formatWhatsAppLink(
+                          tech.whatsapp,
+                          `Olá ${tech.name}, há um projeto de interesse para você no GetMaker!`
+                        )}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-xs text-emerald-400/70 hover:text-emerald-400 transition"
+                      >
+                        <MessageCircle className="w-3.5 h-3.5" />
+                        Contatar
+                      </a>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
   );
 }
 
-function TechnicianAdminCard({ technician, onDelete }: { technician: Technician; onDelete: (id: string) => void }) {
+function TechnicianAdminCard({
+  technician,
+  onDelete,
+}: {
+  technician: Technician;
+  onDelete: (id: string) => void;
+}) {
   const whatsappLink = technician.whatsapp
     ? formatWhatsAppLink(technician.whatsapp)
     : null;
