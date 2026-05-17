@@ -2,16 +2,20 @@ import { createClient } from "@/lib/supabase/server";
 import { AdminDashboard } from "@/components/AdminDashboard";
 import type { Project, Technician } from "@/types";
 
+interface TechnicianInfo {
+  id: string;
+  name: string;
+  whatsapp: string | null;
+}
+
 export default async function AdminPage() {
   const supabase = await createClient();
 
-  // Fetch projects
   const { data: projectsRaw } = await supabase
     .from("projects")
     .select("*")
     .order("created_at", { ascending: false });
 
-  // Fetch interests with technician info
   const { data: allInterests } = await supabase
     .from("project_interests")
     .select("project_id, technician_id, technicians(id, name, whatsapp)");
@@ -23,15 +27,17 @@ export default async function AdminPage() {
     return {
       ...p,
       interests_count: projectInterests.length,
-      interested_technicians: projectInterests.map((i) => ({
-        id: (i.technicians as { id: string; name: string; whatsapp: string | null })?.id ?? "",
-        name: (i.technicians as { id: string; name: string; whatsapp: string | null })?.name ?? "",
-        whatsapp: (i.technicians as { id: string; name: string; whatsapp: string | null })?.whatsapp ?? null,
-      })),
+      interested_technicians: projectInterests.map((i) => {
+        const tech = (i.technicians as unknown) as TechnicianInfo | null;
+        return {
+          id: tech?.id ?? "",
+          name: tech?.name ?? "",
+          whatsapp: tech?.whatsapp ?? null,
+        };
+      }),
     };
   });
 
-  // Fetch technicians with interest counts
   const { data: techniciansRaw } = await supabase
     .from("technicians")
     .select("*")
