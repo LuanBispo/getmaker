@@ -11,16 +11,25 @@ export default async function AdminPage() {
     .select("*")
     .order("created_at", { ascending: false });
 
-  // Fetch interest counts
+  // Fetch interests with technician info
   const { data: allInterests } = await supabase
     .from("project_interests")
-    .select("project_id, technician_id");
+    .select("project_id, technician_id, technicians(id, name, whatsapp)");
 
-  const projects: Project[] = (projectsRaw ?? []).map((p) => ({
-    ...p,
-    interests_count: (allInterests ?? []).filter((i) => i.project_id === p.id)
-      .length,
-  }));
+  const projects: Project[] = (projectsRaw ?? []).map((p) => {
+    const projectInterests = (allInterests ?? []).filter(
+      (i) => i.project_id === p.id
+    );
+    return {
+      ...p,
+      interests_count: projectInterests.length,
+      interested_technicians: projectInterests.map((i) => ({
+        id: (i.technicians as { id: string; name: string; whatsapp: string | null })?.id ?? "",
+        name: (i.technicians as { id: string; name: string; whatsapp: string | null })?.name ?? "",
+        whatsapp: (i.technicians as { id: string; name: string; whatsapp: string | null })?.whatsapp ?? null,
+      })),
+    };
+  });
 
   // Fetch technicians with interest counts
   const { data: techniciansRaw } = await supabase
