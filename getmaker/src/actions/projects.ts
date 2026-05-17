@@ -42,7 +42,7 @@ export async function submitProject(
   }
 
   // Envia e-mails para todos os técnicos em background (não bloqueia resposta)
-  notifyTechnicians({
+await notifyTechnicians({
     client_name,
     description,
     city_state,
